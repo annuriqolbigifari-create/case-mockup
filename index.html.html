@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaseLab Design Studio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Great+Vibes&family=Montserrat:wght@700&family=Pacifico&family=Playfair+Display:ital,wght@1,700&family=Sacramento&family=Satisfy&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+
+    <div id="alertBox" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-indigo-400 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px]">
+        <i data-lucide="sparkles" class="w-5 h-5 text-yellow-300 animate-pulse"></i>
+        <span id="alertMsg" class="text-sm font-semibold">Notifikasi</span>
+    </div>
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-indigo-500 to-purple-500 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+                <i data-lucide="layout" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent">
+                    CaseLab Studio
+                </h1>
+                <p class="text-[11px] text-slate-400 font-medium">Smart Mockup Engine (Cloud Sync)</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700">
+            <button id="btnRatioStory" onclick="setAspectRatio('9:16')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-indigo-500 text-white shadow-md">
+                <i data-lucide="rectangle-vertical" class="w-4 h-4"></i> 9:16 (Story)
+            </button>
+            <button id="btnRatioSquare" onclick="setAspectRatio('1:1')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-400 hover:text-slate-200">
+                <i data-lucide="square" class="w-4 h-4"></i> 1:1 (Feed/Kotak)
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <section class="lg:col-span-5 flex flex-col gap-6 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl h-full overflow-y-auto custom-scrollbar" style="max-height: calc(100vh - 120px);">
+            
+            <div class="flex flex-col gap-3">
+                <label class="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+                    <i data-lucide="smartphone" class="w-4 h-4 text-indigo-400"></i> 1. Pilih Model HP
+                </label>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-semibold text-slate-400">Pilih Brand</span>
+                        <select id="brandSelect" onchange="handleBrandChange()" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none">
+                            <!-- Diisi via JS -->
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1 w-full overflow-hidden">
+                        <span class="text-[10px] font-semibold text-slate-400">Pilih Tipe HP</span>
+                        <div class="flex gap-2 w-full">
+                            <select id="modelSelect" onchange="handleModelChange()" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none truncate min-w-0">
+                                <!-- Diisi via JS -->
+                            </select>
+                            <button id="btnDeleteModel" onclick="deleteCurrentModel()" class="hidden items-center justify-center gap-1 bg-rose-950/30 border border-rose-900/50 px-3 py-2 rounded-lg text-rose-400 hover:bg-rose-900/50 hover:text-rose-300 transition-colors shadow-sm" title="Hapus Tipe HP Ini">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                <span class="text-[11px] font-bold">Hapus</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2 p-3 bg-indigo-950/20 border border-indigo-900/40 rounded-xl flex flex-col gap-3">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleCustomForm()">
+                        <span class="text-xs font-bold text-indigo-300 flex items-center gap-1.5"><i data-lucide="cloud-upload" class="w-3.5 h-3.5"></i> Tambah Template ke Cloud</span>
+                        <i data-lucide="chevron-down" id="customFormIcon" class="w-4 h-4 text-indigo-400 transition-transform"></i>
+                    </div>
+                    
+                    <div id="customUploadForm" class="hidden flex-col gap-2 pt-2 border-t border-indigo-900/30">
+                        <input type="text" id="newBrandInput" placeholder="Nama Brand (ex: Oppo, Xiaomi)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 outline-none">
+                        <input type="text" id="newModelInput" placeholder="Nama Tipe HP (ex: Reno 8 Pro)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:border-indigo-500 outline-none">
+                        
+                        <div class="relative border border-dashed border-indigo-500/50 hover:border-indigo-400 p-2 rounded-lg text-center bg-slate-900 cursor-pointer transition-colors mt-1">
+                            <input type="file" id="customTemplateFile" accept="image/png" onchange="handleCustomTemplateUpload(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div class="flex items-center justify-center gap-1 text-[11px] font-semibold text-indigo-300">
+                                <i data-lucide="image" class="w-3.5 h-3.5"></i> Pilih File PNG Transparan
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative border-2 border-dashed border-slate-700 hover:border-indigo-500 p-4 rounded-xl text-center bg-slate-950 transition-colors mt-2 group">
+                    <input type="file" id="designImageFile" accept="image/*" onchange="handleImageUpload(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <i data-lucide="image-plus" class="w-6 h-6 text-slate-400 group-hover:text-indigo-400 transition-colors"></i>
+                        <div>
+                            <p class="text-xs font-bold text-slate-200">Unggah Desain Konsumen</p>
+                            <p class="text-[10px] text-slate-500 mt-1">Format JPG atau PNG</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="imageStatusBox" class="hidden items-center justify-between p-2.5 bg-emerald-950/20 border border-emerald-900/40 rounded-xl mt-1">
+                    <span class="text-[11px] font-semibold text-emerald-400">Desain aktif siap cetak</span>
+                    <button onclick="removeDesign()" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 z-20 relative">Hapus</button>
+                </div>
+            </div>
+
+            <div id="maskingControls" class="hidden flex-col gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
+                        <i data-lucide="settings" class="w-4 h-4 text-indigo-400"></i> Penyesuaian Area Masking
+                    </label>
+                    <button onclick="resetMasking()" class="p-1 text-slate-500 hover:text-white text-[10px] font-bold">Reset</button>
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[11px] font-semibold text-slate-400"><span>Lebar Area</span><span id="lblMaskW" class="text-indigo-400">440px</span></div>
+                    <input type="range" id="inpMaskW" min="150" max="800" step="1" oninput="updateState('maskW', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                </div>
+                <div class="flex flex-col gap-1 mt-1">
+                    <div class="flex justify-between text-[11px] font-semibold text-slate-400"><span>Tinggi Area</span><span id="lblMaskH" class="text-indigo-400">900px</span></div>
+                    <input type="range" id="inpMaskH" min="300" max="1500" step="1" oninput="updateState('maskH', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                </div>
+                <div class="flex flex-col gap-1 mt-1">
+                    <div class="flex justify-between text-[11px] font-semibold text-slate-400"><span>Radius Sudut</span><span id="lblMaskR" class="text-indigo-400">50px</span></div>
+                    <input type="range" id="inpMaskR" min="0" max="250" step="1" oninput="updateState('maskR', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-1">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-semibold text-slate-400">Geser X Area</span>
+                        <input type="range" id="inpMaskX" min="-300" max="300" step="1" oninput="updateState('maskX', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-[10px] font-semibold text-slate-400">Geser Y Area</span>
+                        <input type="range" id="inpMaskY" min="-300" max="300" step="1" oninput="updateState('maskY', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800" />
+
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+                        <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i> 2. Transform Desain
+                    </label>
+                    <button onclick="resetDesign()" class="flex items-center gap-1 text-slate-400 hover:text-white text-[10px] font-bold">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset
+                    </button>
+                </div>
+
+                <div id="transformControls" class="space-y-3 bg-slate-950 p-4 rounded-xl border border-slate-800 opacity-50 pointer-events-none transition-opacity">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[11px] font-bold"><span class="text-slate-400">Skala Desain</span><span id="lblScale" class="text-indigo-400">100%</span></div>
+                        <input type="range" id="inpScale" min="0.2" max="4.0" step="0.02" value="1" oninput="updateState('scale', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                    </div>
+                    <div class="flex flex-col gap-1 mt-1">
+                        <div class="flex justify-between text-[11px] font-bold"><span class="text-slate-400">Rotasi Sudut</span><span id="lblRot" class="text-indigo-400">0°</span></div>
+                        <input type="range" id="inpRot" min="-180" max="180" step="1" value="0" oninput="updateState('rotation', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800" />
+
+            <div class="flex flex-col gap-3">
+                <label class="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+                    <i data-lucide="type" class="w-4 h-4 text-emerald-400"></i> 3. Penambahan Teks
+                </label>
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex flex-col gap-3">
+                    <input type="text" id="inpText" placeholder="Ketik nama atau kata-kata..." oninput="updateState('textContent', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none">
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-semibold text-slate-400">Pilih Font Estetik</span>
+                            <select id="selFont" onchange="updateState('textFont', this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white outline-none">
+                                <option value="Great Vibes">Great Vibes (Kalsik)</option>
+                                <option value="Dancing Script">Dancing Script</option>
+                                <option value="Pacifico">Pacifico</option>
+                                <option value="Satisfy">Satisfy</option>
+                                <option value="Sacramento">Sacramento</option>
+                                <option value="Montserrat">Montserrat (Modern)</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-semibold text-slate-400">Warna Teks</span>
+                            <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-1 pr-2">
+                                <input type="color" id="inpTextColor" value="#ffffff" oninput="updateState('textColor', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 bg-transparent p-0">
+                                <span id="lblTextColor" class="text-[10px] text-slate-300 uppercase">#ffffff</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-semibold text-slate-400">Warna Contour (Garis Tepi)</span>
+                            <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg p-1 pr-2">
+                                <input type="color" id="inpContourColor" value="#000000" oninput="updateState('textContourColor', this.value)" class="w-6 h-6 rounded cursor-pointer border-0 bg-transparent p-0">
+                                <span id="lblContourColor" class="text-[10px] text-slate-300 uppercase">#000000</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1 justify-center">
+                            <div class="flex justify-between text-[10px] font-semibold text-slate-400">
+                                <span>Tebal Contour</span><span id="lblContourW" class="text-emerald-400">0px</span>
+                            </div>
+                            <input type="range" id="inpContourW" min="0" max="40" step="1" value="0" oninput="updateState('textContourWidth', this.value)" class="w-full accent-emerald-500 h-1 cursor-pointer">
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1 mt-1">
+                        <div class="flex justify-between text-[10px] font-semibold text-slate-400"><span>Ukuran Font</span><span id="lblTextSize" class="text-emerald-400">80px</span></div>
+                        <input type="range" id="inpTextSize" min="20" max="300" step="1" value="80" oninput="updateState('textSize', this.value)" class="w-full accent-emerald-500 h-1 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800" />
+            
+            <div class="flex flex-col gap-3">
+                <label class="text-xs font-bold text-slate-300 flex items-center gap-2 uppercase tracking-wider">
+                    <i data-lucide="droplet" class="w-4 h-4 text-cyan-400"></i> 4. Efek Visual Akhir
+                </label>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <span class="text-[10px] font-semibold text-slate-400">Tema Background</span>
+                        <select id="selBg" onchange="updateState('selectedBg', this.value)" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs text-white outline-none">
+                            <option value="wood_dark">Elegant Dark Wood</option>
+                            <option value="studio_dark">Dark Studio Soft</option>
+                            <option value="studio_light">Minimalist Light</option>
+                            <option value="studio_warm">Warm Terrazzo</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1.5 justify-center">
+                        <div class="flex justify-between text-[10px] font-semibold text-slate-400">
+                            <span>Kilauan / Glossy</span><span id="lblGlossy" class="text-cyan-400">50%</span>
+                        </div>
+                        <input type="range" id="inpGlossy" min="0" max="100" step="5" value="50" oninput="updateState('glossyIntensity', this.value)" class="w-full accent-cyan-500 h-1 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-2">
+                <button onclick="downloadOutput()" class="w-full bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i> Download Mockup
+                </button>
+            </div>
+        </section>
+
+        <section class="lg:col-span-7 flex flex-col items-center gap-4">
+            
+            <div class="flex items-center bg-slate-900 border border-slate-800 rounded-full p-1 shadow-lg z-10">
+                <span class="px-3 text-xs font-semibold text-slate-400 mr-2 flex items-center gap-1.5">
+                    <i data-lucide="mouse-pointer-2" class="w-3.5 h-3.5"></i> Mode Geser:
+                </span>
+                <button id="btnDragDesign" onclick="setDragMode('design')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-indigo-500 text-white shadow">
+                    Desain Casing
+                </button>
+                <button id="btnDragText" onclick="setDragMode('text')" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                    Teks Nama
+                </button>
+            </div>
+
+            <div id="canvasWrapper" class="relative w-full max-w-[450px] aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-900 group transition-all duration-300">
+                <canvas id="mockupCanvas" class="w-full h-full object-cover block select-none cursor-grab active:cursor-grabbing" style="touch-action: none;"></canvas>
+                
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-950/80 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-semibold text-slate-300 pointer-events-none flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    <i data-lucide="move" class="w-3 h-3"></i> Geser kursor/jari untuk mengatur posisi
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        /* KONFIGURASI FIREBASE ANDA */
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyC6Ens-m6SVAPehqYHQfsS2e_--AxtMByM",
+            authDomain: "haicasing-database.firebaseapp.com",
+            projectId: "haicasing-database",
+            storageBucket: "haicasing-database.firebasestorage.app",
+            messagingSenderId: "945702983728",
+            appId: "1:945702983728:web:d3a23795dfdce47b41f5f5"
+        };
+        
+        const envFirebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        const finalFirebaseConfig = envFirebaseConfigStr ? JSON.parse(envFirebaseConfigStr) : myFirebaseConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'caselab-studio-app';
+
+        let db, auth;
+        try {
+            if (Object.keys(finalFirebaseConfig).length > 0 && finalFirebaseConfig.apiKey !== "YOUR_API_KEY") {
+                const app = initializeApp(finalFirebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+            } else {
+                console.warn("⚠️ Firebase belum dikonfigurasi. Aplikasi berjalan dalam mode lokal.");
+            }
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+
+        lucide.createIcons();
+
+        /* DATABASE LOKAL BAWAAN */
+        window.PHONE_DB = {
+            "Apple": [
+                { id: "iphone_15_pro", name: "iPhone 15 Pro", isCustom: false, borderRadius: 58, cameraType: "iphone_triple", cameraW: 145, cameraH: 145, cameraX: 45, cameraY: 45, cameraRadius: 32 }
+            ],
+            "Samsung": [
+                { id: "samsung_a57", name: "Samsung Galaxy A57 5G", isCustom: false, borderRadius: 50, cameraType: "samsung_vertical", cameraW: 75, cameraH: 195, cameraX: 45, cameraY: 45, cameraRadius: 18 },
+                { id: "samsung_s24", name: "Samsung Galaxy S24 Ultra", isCustom: false, borderRadius: 20, cameraType: "samsung_vertical", cameraW: 80, cameraH: 220, cameraX: 35, cameraY: 40, cameraRadius: 15 }
+            ],
+            "Infinix": [
+                { id: "infinix_note_40", name: "Infinix Note 40", isCustom: false, borderRadius: 45, cameraType: "infinix_plate", cameraW: 170, cameraH: 170, cameraX: 40, cameraY: 40, cameraRadius: 20 }
+            ]
+        };
+
+        const BACKGROUND_THEMES = [
+            { id: 'wood_dark', color1: '#1e1b18', color2: '#0f0e0d', type: 'wood' },
+            { id: 'studio_dark', color1: '#2a2d32', color2: '#111315', type: 'gradient' },
+            { id: 'studio_light', color1: '#f3f4f6', color2: '#d1d5db', type: 'gradient' },
+            { id: 'studio_warm', color1: '#fdf0ed', color2: '#e3c4bc', type: 'gradient' }
+        ];
+
+        /* STATE MANAJEMEN APLIKASI */
+        window.appState = {
+            selectedBrand: 'Apple', selectedModel: 'iphone_15_pro', activeModelData: window.PHONE_DB['Apple'][0],
+            aspectRatio: '9:16', selectedBg: 'wood_dark', glossyIntensity: 50,
+            imageObj: null, scale: 1.0, offsetX: 0, offsetY: 0, rotation: 0,
+            textContent: '', textFont: 'Great Vibes', textColor: '#ffffff', textSize: 80, 
+            textContourColor: '#000000', textContourWidth: 0, textX: 0, textY: 0,
+            maskW: 440, maskH: 900, maskX: 0, maskY: 0, maskR: 50,
+            dragMode: 'design', isDragging: false, dragStart: { x: 0, y: 0 }, dragOffsetStart: { x: 0, y: 0 }
+        };
+
+        const state = window.appState;
+        const canvas = document.getElementById('mockupCanvas');
+        const ctx = canvas.getContext('2d');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+
+        window.showAlert = function(msg) {
+            const box = document.getElementById('alertBox');
+            document.getElementById('alertMsg').innerText = msg;
+            box.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+            setTimeout(() => {
+                box.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+            }, 3000);
+        }
+
+        window.updateState = function(key, value) {
+            let parsedValue = value;
+            if (['scale', 'rotation', 'maskW', 'maskH', 'maskR', 'maskX', 'maskY', 'textSize', 'textContourWidth', 'glossyIntensity'].includes(key)) {
+                parsedValue = parseFloat(value);
+            }
+            state[key] = parsedValue;
+            updateLabels(key, parsedValue);
+            requestAnimationFrame(drawCanvas);
+        }
+
+        function updateLabels(key, value) {
+            const labelMap = {
+                'scale': { id: 'lblScale', suffix: '%' }, 'rotation': { id: 'lblRot', suffix: '°' },
+                'textSize': { id: 'lblTextSize', suffix: 'px' }, 'textContourWidth': { id: 'lblContourW', suffix: 'px' },
+                'maskW': { id: 'lblMaskW', suffix: 'px' }, 'maskH': { id: 'lblMaskH', suffix: 'px' },
+                'maskR': { id: 'lblMaskR', suffix: 'px' }, 'glossyIntensity': { id: 'lblGlossy', suffix: '%' },
+            };
+            if(labelMap[key]) {
+                const el = document.getElementById(labelMap[key].id);
+                if(el) el.innerText = (key === 'scale' ? Math.round(value * 100) : value) + labelMap[key].suffix;
+            }
+            if(key === 'textColor') document.getElementById('lblTextColor').innerText = value;
+            if(key === 'textContourColor') document.getElementById('lblContourColor').innerText = value;
+        }
+
+        window.initDropdowns = function() {
+            const brandSelect = document.getElementById('brandSelect');
+            brandSelect.innerHTML = Object.keys(window.PHONE_DB).map(b => `<option value="${b}">${b}</option>`).join('');
+            if (!window.PHONE_DB[state.selectedBrand]) state.selectedBrand = Object.keys(window.PHONE_DB)[0] || '';
+            brandSelect.value = state.selectedBrand;
+            window.populateModels();
+        }
+
+        window.handleBrandChange = function() {
+            state.selectedBrand = document.getElementById('brandSelect').value;
+            window.populateModels();
+        }
+
+        window.populateModels = function() {
+            const modelSelect = document.getElementById('modelSelect');
+            const models = window.PHONE_DB[state.selectedBrand] || [];
+            if(models.length === 0) {
+                modelSelect.innerHTML = `<option disabled selected>Tidak ada tipe</option>`;
+                return;
+            }
+            modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.name} ${m.isCustom ? '☁️' : ''}</option>`).join('');
+            state.selectedModel = models[0].id;
+            modelSelect.value = state.selectedModel;
+            window.handleModelChange();
+        }
+
+        window.handleModelChange = function() {
+            state.selectedModel = document.getElementById('modelSelect').value;
+            const models = window.PHONE_DB[state.selectedBrand] || [];
+            state.activeModelData = models.find(m => m.id === state.selectedModel);
+            
+            const maskControl = document.getElementById('maskingControls');
+            const btnDelete = document.getElementById('btnDeleteModel');
+            
+            if(state.activeModelData && state.activeModelData.isCustom) {
+                maskControl.classList.remove('hidden'); maskControl.classList.add('flex');
+            } else {
+                maskControl.classList.add('hidden'); maskControl.classList.remove('flex');
+            }
+
+            if(state.activeModelData) {
+                btnDelete.style.display = ''; btnDelete.classList.remove('hidden'); btnDelete.classList.add('flex');
+            } else {
+                btnDelete.classList.add('hidden'); btnDelete.classList.remove('flex');
+            }
+            requestAnimationFrame(drawCanvas);
+        }
+
+        window.toggleCustomForm = function() {
+            const form = document.getElementById('customUploadForm');
+            const icon = document.getElementById('customFormIcon');
+            if(form.classList.contains('hidden')) {
+                form.classList.remove('hidden'); form.classList.add('flex'); icon.style.transform = 'rotate(180deg)';
+            } else {
+                form.classList.add('hidden'); form.classList.remove('flex'); icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function fetchModelsFromFirebase() {
+            if (!auth || !auth.currentUser || !db) return;
+            const customModelsCol = collection(db, 'artifacts', appId, 'public', 'data', 'custom_models');
+            try {
+                const querySnapshot = await getDocs(customModelsCol);
+                let loadPromises = [];
+
+                querySnapshot.forEach((document) => {
+                    const data = document.data();
+                    const brand = data.brand;
+                    
+                    if (!window.PHONE_DB[brand]) window.PHONE_DB[brand] = [];
+                    if(window.PHONE_DB[brand].find(m => m.id === data.id)) return;
+
+                    const newModel = { id: data.id, name: data.name, isCustom: true };
+                    
+                    const p = new Promise((resolve) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            newModel.customImgObj = img;
+                            window.PHONE_DB[brand].push(newModel);
+                            resolve();
+                        };
+                        img.onerror = () => resolve(); 
+                        img.src = data.imageBase64;
+                    });
+                    loadPromises.push(p);
+                });
+                
+                await Promise.all(loadPromises);
+                window.initDropdowns();
+                requestAnimationFrame(drawCanvas);
+            } catch (error) {
+                console.error("Error loading custom models from Firebase: ", error);
+            }
+        }
+
+        function compressImageToBase64(img, maxWidth = 600) {
+            const tempCanvas = document.createElement('canvas');
+            const tCtx = tempCanvas.getContext('2d');
+            let ratio = 1;
+            if (img.width > maxWidth) ratio = maxWidth / img.width;
+            tempCanvas.width = img.width * ratio;
+            tempCanvas.height = img.height * ratio;
+            tCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+            return tempCanvas.toDataURL('image/webp', 0.85); 
+        }
+
+        window.handleCustomTemplateUpload = function(event) {
+            const file = event.target.files[0];
+            const inputBrand = document.getElementById('newBrandInput').value.trim();
+            const inputModel = document.getElementById('newModelInput').value.trim();
+
+            if (!inputBrand || !inputModel) {
+                window.showAlert("⚠️ Harap isi nama Brand dan Tipe HP terlebih dahulu!"); return;
+            }
+
+            if (file && file.type === 'image/png') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        const newId = 'custom_' + Date.now();
+                        const compressedBase64 = compressImageToBase64(img);
+                        
+                        const compressedImg = new Image();
+                        compressedImg.onload = async () => {
+                            const newModel = { id: newId, name: inputModel, isCustom: true, customImgObj: compressedImg };
+                            const brandName = inputBrand.charAt(0).toUpperCase() + inputBrand.slice(1).toLowerCase();
+                            
+                            if (!window.PHONE_DB[brandName]) window.PHONE_DB[brandName] = [];
+                            window.PHONE_DB[brandName].push(newModel);
+
+                            window.initDropdowns(); 
+                            state.selectedBrand = brandName;
+                            document.getElementById('brandSelect').value = brandName;
+                            window.populateModels(); 
+                            document.getElementById('modelSelect').value = newId;
+                            window.handleModelChange(); 
+
+                            document.getElementById('newBrandInput').value = ''; document.getElementById('newModelInput').value = '';
+                            document.getElementById('customTemplateFile').value = '';
+                            window.toggleCustomForm();
+
+                            if(db && auth && auth.currentUser) {
+                                window.showAlert(`☁️ Menyimpan template ke Cloud...`);
+                                try {
+                                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'custom_models', newId);
+                                    await setDoc(docRef, { id: newId, name: inputModel, brand: brandName, imageBase64: compressedBase64 });
+                                    window.showAlert(`✅ Template ${brandName} ${inputModel} berhasil ditambahkan ke Cloud!`);
+                                } catch(err) {
+                                    console.error(err);
+                                    window.showAlert("⚠️ Gagal menyimpan ke cloud.");
+                                }
+                            } else {
+                                window.showAlert(`✅ Template ditambahkan (Mode Lokal)`);
+                            }
+                        };
+                        compressedImg.src = compressedBase64;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                window.showAlert("⚠️ Harap unggah file berformat PNG transparan!");
+            }
+        }
+
+        window.deleteCurrentModel = async function() {
+            const brand = state.selectedBrand;
+            const modelId = state.selectedModel;
+            const modelData = state.activeModelData;
+            
+            if (!modelData) return;
+            const totalBrands = Object.keys(window.PHONE_DB).length;
+            if (totalBrands === 1 && window.PHONE_DB[brand].length === 1) {
+                window.showAlert("⚠️ Tidak dapat menghapus! Harus tersisa minimal 1 tipe HP."); return;
+            }
+            
+            // Delete Locally
+            window.PHONE_DB[brand] = window.PHONE_DB[brand].filter(m => m.id !== modelId);
+            if (window.PHONE_DB[brand].length === 0) {
+                delete window.PHONE_DB[brand]; window.initDropdowns(); 
+            } else {
+                window.populateModels(); 
+            }
+
+            // Delete From Cloud
+            if (modelData.isCustom && db && auth && auth.currentUser) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'custom_models', modelId);
+                    await deleteDoc(docRef);
+                } catch(e) {
+                    console.error("Gagal menghapus dari cloud:", e);
+                }
+            }
+            window.showAlert(`✅ Tipe HP ${modelData.name} berhasil dihapus!`);
+        }
+
+        window.handleImageUpload = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        state.imageObj = img;
+                        const targetW = state.activeModelData.isCustom ? state.maskW : 440;
+                        const scaleFactor = Math.max(targetW / img.width, 1.0);
+                        
+                        document.getElementById('inpScale').value = scaleFactor; window.updateState('scale', scaleFactor);
+                        window.updateState('offsetX', 0); window.updateState('offsetY', 0); window.updateState('rotation', 0);
+                        document.getElementById('inpRot').value = 0; document.getElementById('inpScale').value = scaleFactor;
+
+                        document.getElementById('imageStatusBox').classList.remove('hidden'); document.getElementById('imageStatusBox').classList.add('flex');
+                        document.getElementById('transformControls').classList.remove('opacity-50', 'pointer-events-none');
+                        
+                        window.setDragMode('design');
+                        window.showAlert("🎨 Desain konsumen berhasil dipasang!");
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.removeDesign = function() {
+            state.imageObj = null; document.getElementById('designImageFile').value = '';
+            document.getElementById('imageStatusBox').classList.add('hidden'); document.getElementById('imageStatusBox').classList.remove('flex');
+            document.getElementById('transformControls').classList.add('opacity-50', 'pointer-events-none');
+            requestAnimationFrame(drawCanvas);
+        }
+
+        window.setDragMode = function(mode) {
+            state.dragMode = mode;
+            const btnDesign = document.getElementById('btnDragDesign'), btnText = document.getElementById('btnDragText');
+            if(mode === 'design') {
+                btnDesign.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-indigo-500 text-white shadow";
+                btnText.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+            } else {
+                btnText.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-emerald-500 text-white shadow";
+                btnDesign.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+            }
+        }
+
+        window.resetDesign = function() {
+            if(!state.imageObj) return;
+            document.getElementById('inpScale').value = 1; window.updateState('scale', 1);
+            document.getElementById('inpRot').value = 0; window.updateState('rotation', 0);
+            window.updateState('offsetX', 0); window.updateState('offsetY', 0);
+            window.showAlert("Posisi desain dikembalikan ke tengah.");
+        }
+
+        window.resetMasking = function() {
+            document.getElementById('inpMaskW').value = 440; window.updateState('maskW', 440);
+            document.getElementById('inpMaskH').value = 900; window.updateState('maskH', 900);
+            document.getElementById('inpMaskR').value = 50; window.updateState('maskR', 50);
+            document.getElementById('inpMaskX').value = 0; window.updateState('maskX', 0);
+            document.getElementById('inpMaskY').value = 0; window.updateState('maskY', 0);
+            window.showAlert("Area mask dikembalikan ke default.");
+        }
+
+        window.setAspectRatio = function(ratio) {
+            state.aspectRatio = ratio;
+            const btnStory = document.getElementById('btnRatioStory'), btnSquare = document.getElementById('btnRatioSquare');
+            if(ratio === '9:16') {
+                btnStory.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-indigo-500 text-white shadow-md";
+                btnSquare.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-400 hover:text-slate-200";
+                canvasWrapper.classList.remove('aspect-square'); canvasWrapper.classList.add('aspect-[9/16]');
+            } else {
+                btnSquare.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-indigo-500 text-white shadow-md";
+                btnStory.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-400 hover:text-slate-200";
+                canvasWrapper.classList.remove('aspect-[9/16]'); canvasWrapper.classList.add('aspect-square');
+            }
+            requestAnimationFrame(drawCanvas);
+        }
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
+        }
+
+        canvas.addEventListener('mousedown', handlePointerDown); canvas.addEventListener('touchstart', handlePointerDown, {passive: false});
+        window.addEventListener('mousemove', handlePointerMove); window.addEventListener('touchmove', handlePointerMove, {passive: false});
+        window.addEventListener('mouseup', handlePointerUp); window.addEventListener('touchend', handlePointerUp);
+
+        function handlePointerDown(e) {
+            if (!state.imageObj && state.dragMode === 'design') return;
+            if (state.textContent.trim() === '' && state.dragMode === 'text') return;
+            state.isDragging = true; state.dragStart = getCanvasCoords(e);
+            if (state.dragMode === 'text') state.dragOffsetStart = { x: state.textX, y: state.textY };
+            else state.dragOffsetStart = { x: state.offsetX, y: state.offsetY };
+        }
+
+        function handlePointerMove(e) {
+            if (!state.isDragging) return;
+            e.preventDefault(); 
+            const coords = getCanvasCoords(e);
+            const dx = coords.x - state.dragStart.x; const dy = coords.y - state.dragStart.y;
+
+            if (state.dragMode === 'text') {
+                state.textX = Math.round(state.dragOffsetStart.x + dx); state.textY = Math.round(state.dragOffsetStart.y + dy);
+            } else {
+                const rad = (-state.rotation * Math.PI) / 180;
+                const rotatedDx = dx * Math.cos(rad) - dy * Math.sin(rad); const rotatedDy = dx * Math.sin(rad) + dy * Math.cos(rad);
+                state.offsetX = Math.round(state.dragOffsetStart.x + rotatedDx); state.offsetY = Math.round(state.dragOffsetStart.y + rotatedDy);
+            }
+            requestAnimationFrame(drawCanvas);
+        }
+        function handlePointerUp() { state.isDragging = false; }
+
+        function drawRoundedRectPath(ctx, x, y, width, height, radius) {
+            ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
+        }
+
+        function drawCameraModule(ctx, phoneX, phoneY, model) {
+            const cx = phoneX + model.cameraX, cy = phoneY + model.cameraY, cw = model.cameraW, ch = model.cameraH, r = model.cameraRadius;
+            ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 4;
+            const baseGrad = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
+            baseGrad.addColorStop(0, '#262626'); baseGrad.addColorStop(1, '#121212');
+            ctx.fillStyle = baseGrad; ctx.beginPath(); drawRoundedRectPath(ctx, cx, cy, cw, ch, r); ctx.fill();
+            ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); drawRoundedRectPath(ctx, cx, cy, cw, ch, r); ctx.stroke();
+
+            if (model.cameraType === "iphone_triple") {
+                [{x:cx+42, y:cy+42}, {x:cx+42, y:cy+103}, {x:cx+101, y:cy+72.5}].forEach(pos => {
+                    ctx.strokeStyle = '#d4d4d8'; ctx.lineWidth = 3; ctx.fillStyle = '#171717';
+                    ctx.beginPath(); ctx.arc(pos.x, pos.y, 22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                    ctx.fillStyle = '#0a0a0a'; ctx.beginPath(); ctx.arc(pos.x, pos.y, 16, 0, Math.PI*2); ctx.fill();
+                });
+            } else if (model.cameraType === "samsung_vertical") {
+                [cy+40, cy+97, cy+155].forEach(y => {
+                    ctx.strokeStyle = '#71717a'; ctx.lineWidth = 2.5; ctx.fillStyle = '#18181b';
+                    ctx.beginPath(); ctx.arc(cx+cw/2, y, 19, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                });
+            } else if (model.cameraType === "infinix_plate") {
+                [{x:cx+45, y:cy+45}, {x:cx+120, y:cy+45}, {x:cx+45, y:cy+120}].forEach(pos => {
+                    ctx.strokeStyle = '#52525b'; ctx.lineWidth = 2.5; ctx.fillStyle = '#111111';
+                    ctx.beginPath(); ctx.arc(pos.x, pos.y, 22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                });
+            }
+            ctx.restore();
+        }
+
+        window.drawCanvas = function() {
+            if(!state.activeModelData) return;
+            const W = 1080; const H = state.aspectRatio === '1:1' ? 1080 : 1920;
+            canvas.width = W; canvas.height = H; ctx.clearRect(0, 0, W, H);
+
+            const bgInfo = BACKGROUND_THEMES.find(b => b.id === state.selectedBg);
+            if (bgInfo.type === 'wood') {
+                const grad = ctx.createLinearGradient(0, 0, 0, H);
+                grad.addColorStop(0, bgInfo.color1); grad.addColorStop(1, bgInfo.color2);
+                ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+                ctx.strokeStyle = "rgba(255,255,255,0.02)"; ctx.lineWidth = 1;
+                for (let i = 0; i < W; i += 15) {
+                    ctx.beginPath(); ctx.moveTo(i + Math.sin(i) * 30, 0);
+                    ctx.bezierCurveTo(i + 50, H * 0.25, i - 50, H * 0.75, i + Math.sin(i) * 30, H); ctx.stroke();
+                }
+                const vignette = ctx.createRadialGradient(W/2, H/2, W*0.3, W/2, H/2, W*0.9);
+                vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,0.85)');
+                ctx.fillStyle = vignette; ctx.fillRect(0, 0, W, H);
+            } else {
+                const grad = ctx.createRadialGradient(W/2, H/2, 100, W/2, H/2, W);
+                grad.addColorStop(0, bgInfo.color1); grad.addColorStop(1, bgInfo.color2);
+                ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+            }
+
+            const modelData = state.activeModelData, isCustom = modelData.isCustom;
+            const phoneW = isCustom ? state.maskW : 440, phoneH = isCustom ? state.maskH : 900;
+            const phoneX = isCustom ? ((W - phoneW) / 2 + state.maskX) : ((W - phoneW) / 2);
+            const phoneY = isCustom ? ((H - phoneH) / 2 + state.maskY) : ((H - phoneH) / 2);
+            const borderRadius = isCustom ? state.maskR : modelData.borderRadius;
+
+            ctx.save(); ctx.shadowColor = 'rgba(0, 0, 0, 0.65)'; ctx.shadowBlur = 45; ctx.shadowOffsetX = 15; ctx.shadowOffsetY = 25;
+            ctx.fillStyle = 'rgba(0,0,0,0.95)'; drawRoundedRectPath(ctx, phoneX, phoneY, phoneW, phoneH, borderRadius); ctx.fill(); ctx.restore();
+
+            ctx.save(); ctx.beginPath(); drawRoundedRectPath(ctx, phoneX, phoneY, phoneW, phoneH, borderRadius); ctx.clip();
+            ctx.fillStyle = '#ffffff'; ctx.fill();
+
+            const centerX = phoneX + phoneW / 2, centerY = phoneY + phoneH / 2;
+
+            if (state.imageObj) {
+                ctx.save(); ctx.translate(centerX + state.offsetX, centerY + state.offsetY);
+                ctx.rotate((state.rotation * Math.PI) / 180); ctx.scale(state.scale, state.scale);
+                ctx.drawImage(state.imageObj, -state.imageObj.width / 2, -state.imageObj.height / 2); ctx.restore();
+            } else {
+                ctx.fillStyle = "#e2e8f0"; ctx.fillRect(phoneX, phoneY, phoneW, phoneH);
+                ctx.fillStyle = "#cbd5e1"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "center"; ctx.fillText("AREA DESAIN", centerX, centerY);
+            }
+
+            if (state.textContent.trim() !== '') {
+                ctx.save(); ctx.translate(centerX + state.textX, centerY + state.textY);
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${state.textSize}px "${state.textFont}"`;
+                ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 2;
+                if (state.textContourWidth > 0) {
+                    ctx.strokeStyle = state.textContourColor; ctx.lineWidth = state.textContourWidth;
+                    ctx.lineJoin = 'round'; ctx.strokeText(state.textContent, 0, 0);
+                }
+                ctx.fillStyle = state.textColor; ctx.fillText(state.textContent, 0, 0); ctx.restore();
+            }
+
+            if (state.glossyIntensity > 0) {
+                ctx.save(); const intensity = state.glossyIntensity / 100;
+                const glossyGrad = ctx.createLinearGradient(phoneX, phoneY, phoneX + phoneW, phoneY + phoneH);
+                glossyGrad.addColorStop(0, `rgba(255,255,255,${0.6 * intensity})`); glossyGrad.addColorStop(0.25, `rgba(255,255,255,${0.1 * intensity})`);
+                glossyGrad.addColorStop(0.35, `rgba(255,255,255,0)`); glossyGrad.addColorStop(0.5, `rgba(255,255,255,0)`);
+                glossyGrad.addColorStop(0.55, `rgba(255,255,255,${0.15 * intensity})`); glossyGrad.addColorStop(0.7, `rgba(255,255,255,${0.05 * intensity})`);
+                glossyGrad.addColorStop(1, `rgba(255,255,255,0)`);
+                ctx.fillStyle = glossyGrad; ctx.fillRect(phoneX, phoneY, phoneW, phoneH); ctx.restore();
+            }
+
+            ctx.restore(); 
+
+            if (isCustom) {
+                if (modelData.customImgObj) {
+                    ctx.save(); ctx.drawImage(modelData.customImgObj, phoneX, phoneY, phoneW, phoneH); ctx.restore();
+                }
+            } else {
+                ctx.save(); ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 6; ctx.beginPath();
+                drawRoundedRectPath(ctx, phoneX + 3, phoneY + 3, phoneW - 6, phoneH - 6, borderRadius - 3); ctx.stroke();
+                ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 3; ctx.beginPath();
+                drawRoundedRectPath(ctx, phoneX, phoneY, phoneW, phoneH, borderRadius); ctx.stroke(); ctx.restore();
+                drawCameraModule(ctx, phoneX, phoneY, modelData);
+            }
+        }
+
+        window.downloadOutput = function() {
+            try {
+                const dataUrl = canvas.toDataURL('image/png', 1.0);
+                const link = document.createElement('a');
+                link.download = `CaseLab_${state.aspectRatio === '1:1' ? 'Kotak' : 'Story'}_${Date.now()}.png`;
+                link.href = dataUrl; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                window.showAlert("🎉 Mockup resolusi tinggi berhasil diunduh!");
+            } catch (err) {
+                window.showAlert("⚠️ Gagal memproses gambar. Coba muat ulang.");
+            }
+        }
+
+        window.initDropdowns();
+        document.fonts.ready.then(() => requestAnimationFrame(window.drawCanvas));
+
+        window.addEventListener('load', async () => {
+            if(auth) {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined') {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    if(auth.currentUser) {
+                        await fetchModelsFromFirebase();
+                        window.showAlert("✅ Terhubung dengan Cloud Database!");
+                    }
+                } catch(e) {
+                    console.error("Auth init failed:", e);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
