@@ -113,6 +113,7 @@
                 </div>
             </div>
 
+            <!-- Kontrol Masking dengan Tombol Save -->
             <div id="maskingControls" class="hidden flex-col gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
                 <div class="flex items-center justify-between">
                     <label class="text-xs font-bold text-slate-300 flex items-center gap-1.5 uppercase tracking-wider">
@@ -143,6 +144,11 @@
                         <input type="range" id="inpMaskY" min="-300" max="300" step="1" oninput="updateState('maskY', this.value)" class="w-full accent-indigo-500 h-1 cursor-pointer">
                     </div>
                 </div>
+
+                <!-- TOMBOL SIMPAN PENGATURAN AREA -->
+                <button onclick="saveMaskingToCloud()" class="mt-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold py-2 rounded-lg transition-colors flex justify-center items-center gap-1.5 shadow-md">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Pengaturan Area ke Cloud
+                </button>
             </div>
 
             <hr class="border-slate-800" />
@@ -279,13 +285,12 @@
         
     </main>
 
-    <!-- PENTING: Jangan taruh komentar HTML didalam script tag type module -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        /* Konfigurasi Firebase dari User */
+        // Ganti dengan konfigurasi Firebase Anda
         const myFirebaseConfig = {
             apiKey: "AIzaSyC6Ens-m6SVAPehqYHQfsS2e_--AxtMByM",
             authDomain: "haicasing-database.firebaseapp.com",
@@ -306,7 +311,7 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
             } else {
-                console.warn("Firebase config error.");
+                console.warn("⚠️ Firebase belum dikonfigurasi. Aplikasi berjalan dalam mode lokal.");
             }
         } catch (e) {
             console.error("Firebase init error:", e);
@@ -314,7 +319,7 @@
 
         lucide.createIcons();
 
-        /* DATABASE LOKAL DIKOSONGKAN AGAR USER BISA MENGISI SENDIRI */
+        // 1. DATABASE BAWAAN KOSONG SESUAI PERMINTAAN
         window.PHONE_DB = {};
 
         const BACKGROUND_THEMES = [
@@ -324,7 +329,6 @@
             { id: 'studio_warm', color1: '#fdf0ed', color2: '#e3c4bc', type: 'gradient' }
         ];
 
-        /* STATE MANAJEMEN APLIKASI */
         window.appState = {
             selectedBrand: '', selectedModel: '', activeModelData: null,
             aspectRatio: '9:16', selectedBg: 'wood_dark', glossyIntensity: 50,
@@ -423,8 +427,25 @@
             const maskControl = document.getElementById('maskingControls');
             const btnDelete = document.getElementById('btnDeleteModel');
             
+            // Tampilkan panel masking jika ini model custom
             if(state.activeModelData && state.activeModelData.isCustom) {
                 maskControl.classList.remove('hidden'); maskControl.classList.add('flex');
+                
+                // 3. SETTING OTOMATIS: Sesuaikan slider dan state dengan data yang disimpan
+                window.updateState('maskW', state.activeModelData.maskW || 440);
+                document.getElementById('inpMaskW').value = state.maskW;
+                
+                window.updateState('maskH', state.activeModelData.maskH || 900);
+                document.getElementById('inpMaskH').value = state.maskH;
+                
+                window.updateState('maskR', state.activeModelData.maskR !== undefined ? state.activeModelData.maskR : 50);
+                document.getElementById('inpMaskR').value = state.maskR;
+                
+                window.updateState('maskX', state.activeModelData.maskX || 0);
+                document.getElementById('inpMaskX').value = state.maskX;
+                
+                window.updateState('maskY', state.activeModelData.maskY || 0);
+                document.getElementById('inpMaskY').value = state.maskY;
             } else {
                 maskControl.classList.add('hidden'); maskControl.classList.remove('flex');
             }
@@ -461,7 +482,17 @@
                     if (!window.PHONE_DB[brand]) window.PHONE_DB[brand] = [];
                     if(window.PHONE_DB[brand].find(m => m.id === data.id)) return;
 
-                    const newModel = { id: data.id, name: data.name, isCustom: true };
+                    // Mengambil data masking dari cloud (jika belum ada, gunakan default)
+                    const newModel = { 
+                        id: data.id, 
+                        name: data.name, 
+                        isCustom: true,
+                        maskW: data.maskW || 440,
+                        maskH: data.maskH || 900,
+                        maskR: data.maskR !== undefined ? data.maskR : 50,
+                        maskX: data.maskX || 0,
+                        maskY: data.maskY || 0
+                    };
                     
                     const p = new Promise((resolve) => {
                         const img = new Image();
@@ -514,7 +545,14 @@
                         
                         const compressedImg = new Image();
                         compressedImg.onload = async () => {
-                            const newModel = { id: newId, name: inputModel, isCustom: true, customImgObj: compressedImg };
+                            // Data awal (default masking)
+                            const newModel = { 
+                                id: newId, 
+                                name: inputModel, 
+                                isCustom: true, 
+                                customImgObj: compressedImg,
+                                maskW: 440, maskH: 900, maskR: 50, maskX: 0, maskY: 0
+                            };
                             const brandName = inputBrand.charAt(0).toUpperCase() + inputBrand.slice(1).toLowerCase();
                             
                             if (!window.PHONE_DB[brandName]) window.PHONE_DB[brandName] = [];
@@ -532,17 +570,18 @@
                             window.toggleCustomForm();
 
                             if(db && auth && auth.currentUser) {
-                                window.showAlert(`☁️ Menyimpan template ke Cloud...`);
+                                window.showAlert(`☁️ Menyimpan template awal ke Cloud...`);
                                 try {
                                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'custom_models', newId);
-                                    await setDoc(docRef, { id: newId, name: inputModel, brand: brandName, imageBase64: compressedBase64 });
-                                    window.showAlert(`✅ Template ${brandName} ${inputModel} berhasil ditambahkan ke Cloud!`);
+                                    await setDoc(docRef, { 
+                                        id: newId, name: inputModel, brand: brandName, imageBase64: compressedBase64,
+                                        maskW: 440, maskH: 900, maskR: 50, maskX: 0, maskY: 0
+                                    });
+                                    window.showAlert(`✅ Template ${brandName} ${inputModel} berhasil dibuat! (Silakan atur ukuran & Simpan)`);
                                 } catch(err) {
                                     console.error(err);
                                     window.showAlert("⚠️ Gagal menyimpan ke cloud.");
                                 }
-                            } else {
-                                window.showAlert(`✅ Template ditambahkan (Mode Lokal)`);
                             }
                         };
                         compressedImg.src = compressedBase64;
@@ -552,6 +591,42 @@
                 reader.readAsDataURL(file);
             } else {
                 window.showAlert("⚠️ Harap unggah file berformat PNG transparan!");
+            }
+        }
+
+        // 2. FUNGSI UNTUK MENYIMPAN PENGATURAN AREA MASKING KE DATABASE
+        window.saveMaskingToCloud = async function() {
+            const modelData = state.activeModelData;
+            if (!modelData || !modelData.isCustom || !db || !auth || !auth.currentUser) {
+                window.showAlert("⚠️ Hanya untuk template kustom dan harus terhubung ke Cloud!");
+                return;
+            }
+
+            // Memperbarui data memori lokal
+            modelData.maskW = state.maskW;
+            modelData.maskH = state.maskH;
+            modelData.maskR = state.maskR;
+            modelData.maskX = state.maskX;
+            modelData.maskY = state.maskY;
+
+            // Memperbarui data di Firebase Cloud
+            try {
+                window.showAlert("☁️ Menyimpan pengaturan ukuran ke Cloud...");
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'custom_models', modelData.id);
+                
+                // Gunakan merge: true untuk memperbarui field masking saja tanpa menimpa gambar
+                await setDoc(docRef, {
+                    maskW: state.maskW,
+                    maskH: state.maskH,
+                    maskR: state.maskR,
+                    maskX: state.maskX,
+                    maskY: state.maskY
+                }, { merge: true });
+                
+                window.showAlert("✅ Pengaturan area & ukuran berhasil disimpan permanen!");
+            } catch (err) {
+                console.error(err);
+                window.showAlert("⚠️ Gagal menyimpan pengaturan ke cloud.");
             }
         }
 
@@ -637,12 +712,13 @@
         }
 
         window.resetMasking = function() {
+            // Hanya mereset di UI sementara (belum tersimpan permanen kecuali diklik tombol Simpan)
             document.getElementById('inpMaskW').value = 440; window.updateState('maskW', 440);
             document.getElementById('inpMaskH').value = 900; window.updateState('maskH', 900);
             document.getElementById('inpMaskR').value = 50; window.updateState('maskR', 50);
             document.getElementById('inpMaskX').value = 0; window.updateState('maskX', 0);
             document.getElementById('inpMaskY').value = 0; window.updateState('maskY', 0);
-            window.showAlert("Area mask dikembalikan ke default.");
+            window.showAlert("Area mask dikembalikan ke ukuran bawaan.");
         }
 
         window.setAspectRatio = function(ratio) {
@@ -727,7 +803,7 @@
                 ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
             }
 
-            /* Jika database kosong, tampilkan pesan di tengah canvas */
+            /* Pesan di tengah jika database kosong */
             if(!state.activeModelData) {
                 ctx.fillStyle = "rgba(255,255,255,0.1)"; 
                 ctx.fillRect(W/2 - 250, H/2 - 400, 500, 800);
@@ -736,7 +812,7 @@
                 ctx.textAlign = "center"; 
                 ctx.fillText("Tambahkan Tipe HP Dulu", W/2, H/2);
                 ctx.font = "normal 22px sans-serif";
-                ctx.fillText("Gunakan menu Tambah Template di panel kiri", W/2, H/2 + 40);
+                ctx.fillText("Gunakan menu Tambah Template ke Cloud", W/2, H/2 + 40);
                 return;
             }
 
